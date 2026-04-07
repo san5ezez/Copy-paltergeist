@@ -3,10 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Poltergeist Clone</title>
+    <title>Poltergeist — Decentralized Production Platform</title>
+    <meta
+      name="description"
+      content="Poltergeist is a decentralized production platform that lets moderator teams control stream overlays, widgets, and live telestration through a synchronized web interface and OBS browser source."
+    />
     <style>
       :root {
         color-scheme: dark;
+        --bg: #030303;
+        --panel: #0d0d0d;
+        --line: #232323;
+        --text: #ececec;
+        --muted: #9f9f9f;
+        --accent: #f5f5f5;
       }
 
       * {
@@ -16,11 +26,130 @@
       html,
       body {
         margin: 0;
-        width: 100%;
         min-height: 100%;
-        background: #000;
+        font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 20% 0%, #101010 0%, var(--bg) 42%), var(--bg);
+        color: var(--text);
+      }
+
+      .layout {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 40px 20px;
+      }
+
+      .hero {
+        width: min(960px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        padding: clamp(24px, 4vw, 48px);
+      }
+
+      .badge {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 8px 12px;
+        background: var(--panel);
+      }
+
+      h1 {
+        margin: 18px 0 14px;
+        font-size: clamp(32px, 7vw, 58px);
+        line-height: 1.04;
+        letter-spacing: -0.02em;
+      }
+
+      .lead {
+        max-width: 70ch;
+        margin: 0;
+        color: #d1d1d1;
+        font-size: clamp(16px, 2.2vw, 21px);
+        line-height: 1.55;
+      }
+
+      .grid {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .footer {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 560px) {
+        .layout {
+          padding: 16px;
+        }
+
+        .hero {
+          border-radius: 12px;
+        }
       }
     </style>
   </head>
-  <body></body>
+  <body>
+    <main class="layout">
+      <section class="hero" aria-labelledby="title">
+        <span class="badge">Poltergeist • Live Production Control</span>
+        <h1 id="title">Decentralized stream management for moderator teams.</h1>
+        <p class="lead">
+          Poltergeist offloads production work from broadcasters to trusted moderators through a synchronized web interface + OBS browser source. Teams can manipulate overlays, update widgets, and annotate gameplay with a live telestrator from desktop or mobile.
+        </p>
+
+        <div class="grid" aria-label="Key capabilities">
+          <article class="card">
+            <h2>Synchronized Control</h2>
+            <p>Multiple operators work in one shared, real-time interface without interrupting the live feed.</p>
+          </article>
+          <article class="card">
+            <h2>OBS Compatible</h2>
+            <p>Uses a standard browser source for straightforward integration into existing production pipelines.</p>
+          </article>
+          <article class="card">
+            <h2>Asset Staging</h2>
+            <p>Manage graphics, widgets, and scene elements in a desktop-grade environment built for complexity.</p>
+          </article>
+          <article class="card">
+            <h2>Mobile Ready</h2>
+            <p>Review and control essential on-screen elements from phones and tablets when away from desktop setups.</p>
+          </article>
+        </div>
+
+        <p class="footer">Built as a clean, single-page clone concept of the Poltergeist product landing experience.</p>
+      </section>
+    </main>
+  </body>
 </html>
