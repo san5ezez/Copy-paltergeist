@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Poltergeist Control Prototype</title>
+    <meta
+      name="description"
+      content="Interactive Poltergeist prototype with moderator controls, overlay widgets, and telestrator preview for OBS browser source workflows."
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #050505;
+        --panel: #0d0d0d;
+        --surface: #111;
+        --border: #262626;
+        --text: #f3f3f3;
+        --muted: #9f9f9f;
+        --accent: #7aa2ff;
+        --danger: #ff6f6f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 20% 0%, #101010 0%, var(--bg) 45%), var(--bg);
+        color: var(--text);
+      }
+
+      .app {
+        max-width: 1280px;
+        margin: 0 auto;
+        min-height: 100vh;
+        padding: 18px;
+        display: grid;
+        grid-template-columns: minmax(320px, 380px) 1fr;
+        gap: 16px;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        backdrop-filter: blur(5px);
+      }
+
+      .controls {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .subtitle {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .group {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--panel);
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .group h2 {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      input,
+      textarea,
+      select,
+      button {
+        border-radius: 9px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        padding: 9px 10px;
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 64px;
+        resize: vertical;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      button:hover {
+        border-color: #3a3a3a;
+      }
+
+      .primary {
+        background: linear-gradient(180deg, #6d95ff, #4069d9);
+        border: 0;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .danger {
+        border-color: #4a2222;
+        color: #ffb9b9;
+      }
+
+      .preview-wrap {
+        padding: 12px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 12px;
+      }
+
+      .preview-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .preview {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: radial-gradient(circle at 65% 15%, #1c2438 0%, #0b101d 33%, #050505 86%);
+      }
+
+      .scene-label {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 12px;
+        color: #c9c9c9;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid #303030;
+        border-radius: 999px;
+        padding: 6px 10px;
+        z-index: 2;
+      }
+
+      .scoreboard {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        display: none;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 9px;
+        border: 1px solid #343434;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 2;
+      }
+
+      .timer {
+        position: absolute;
+        left: 14px;
+        bottom: 84px;
+        display: none;
+        border-radius: 8px;
+        border: 1px solid #343434;
+        background: rgba(0, 0, 0, 0.68);
+        padding: 8px 10px;
+        font-weight: 700;
+        z-index: 2;
+      }
+
+      .lower-third {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        border-radius: 12px;
+        border: 1px solid #323232;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.7));
+        padding: 12px 14px;
+        display: none;
+        z-index: 2;
+      }
+
+      .lower-third h3 {
+        margin: 0;
+        font-size: clamp(16px, 2vw, 24px);
+      }
+
+      .lower-third p {
+        margin: 6px 0 0;
+        color: #d0d0d0;
+      }
+
+      #telestrator {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 3;
+        cursor: crosshair;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 980px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <aside class="panel controls" aria-label="Production control panel">
+        <header>
+          <h1 class="title">Poltergeist Control</h1>
+          <p class="subtitle">Functional prototype for moderator-operated stream overlays.</p>
+        </header>
+
+        <section class="group" aria-labelledby="lt-title">
+          <h2 id="lt-title">Lower third</h2>
+          <label>
+            Headline
+            <input id="headline" value="Decentralized stream management" />
+          </label>
+          <label>
+            Description
+            <textarea id="description">Live updates handled by trusted moderators through synchronized web controls + OBS browser source.</textarea>
+          </label>
+          <div class="btn-row">
+            <button id="toggle-lt" class="primary" type="button">Show lower third</button>
+          </div>
+        </section>
+
+        <section class="group" aria-labelledby="widgets-title">
+          <h2 id="widgets-title">Widgets</h2>
+          <div class="row">
+            <label>
+              Team A
+              <input id="team-a" value="HOME" />
+            </label>
+            <label>
+              Team B
+              <input id="team-b" value="AWAY" />
+            </label>
+          </div>
+          <div class="row">
+            <label>
+              Score A
+              <input id="score-a" type="number" min="0" value="0" />
+            </label>
+            <label>
+              Score B
+              <input id="score-b" type="number" min="0" value="0" />
+            </label>
+          </div>
+          <div class="btn-row">
+            <button id="toggle-score" type="button">Toggle scoreboard</button>
+            <button id="toggle-timer" type="button">Toggle timer</button>
+            <button id="start-stop" class="primary" type="button">Start timer</button>
+          </div>
+        </section>
+
+        <section class="group" aria-labelledby="draw-title">
+          <h2 id="draw-title">Telestrator</h2>
+          <div class="row">
+            <label>
+              Color
+              <input id="pen-color" type="color" value="#ff4949" />
+            </label>
+            <label>
+              Width
+              <input id="pen-width" type="range" min="1" max="12" value="4" />
+            </label>
+          </div>
+          <div class="btn-row">
+            <button id="clear-draw" class="danger" type="button">Clear drawing</button>
+          </div>
+          <p class="hint">Hold mouse or finger on preview to draw annotations in real time.</p>
+        </section>
+      </aside>
+
+      <section class="panel preview-wrap" aria-label="Live output preview">
+        <div class="preview-head">
+          <strong>Program Preview (16:9)</strong>
+          <span class="hint">Use this page directly as OBS Browser Source.</span>
+        </div>
+
+        <div class="preview" id="preview">
+          <span class="scene-label">SCENE • MATCH FEED</span>
+          <div class="scoreboard" id="scoreboard"></div>
+          <div class="timer" id="timer">00:00</div>
+          <div class="lower-third" id="lower-third">
+            <h3 id="lt-headline"></h3>
+            <p id="lt-description"></p>
+          </div>
+          <canvas id="telestrator"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const state = {
+        lowerThirdVisible: false,
+        scoreboardVisible: false,
+        timerVisible: false,
+        timerRunning: false,
+        seconds: 0,
+      };
+
+      const el = {
+        headlineInput: document.getElementById("headline"),
+        descriptionInput: document.getElementById("description"),
+        toggleLt: document.getElementById("toggle-lt"),
+        teamAInput: document.getElementById("team-a"),
+        teamBInput: document.getElementById("team-b"),
+        scoreAInput: document.getElementById("score-a"),
+        scoreBInput: document.getElementById("score-b"),
+        toggleScore: document.getElementById("toggle-score"),
+        toggleTimer: document.getElementById("toggle-timer"),
+        startStop: document.getElementById("start-stop"),
+        penColor: document.getElementById("pen-color"),
+        penWidth: document.getElementById("pen-width"),
+        clearDraw: document.getElementById("clear-draw"),
+        scoreboard: document.getElementById("scoreboard"),
+        timer: document.getElementById("timer"),
+        lowerThird: document.getElementById("lower-third"),
+        ltHeadline: document.getElementById("lt-headline"),
+        ltDescription: document.getElementById("lt-description"),
+        preview: document.getElementById("preview"),
+        canvas: document.getElementById("telestrator"),
+      };
+
+      const ctx = el.canvas.getContext("2d");
+      let drawActive = false;
+      let timerId = null;
+
+      function formatTime(totalSeconds) {
+        const min = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const sec = String(totalSeconds % 60).padStart(2, "0");
+        return `${min}:${sec}`;
+      }
+
+      function updateLowerThird() {
+        el.ltHeadline.textContent = el.headlineInput.value || "";
+        el.ltDescription.textContent = el.descriptionInput.value || "";
+        el.lowerThird.style.display = state.lowerThirdVisible ? "block" : "none";
+        el.toggleLt.textContent = state.lowerThirdVisible ? "Hide lower third" : "Show lower third";
+      }
+
+      function updateScoreboard() {
+        const teamA = el.teamAInput.value || "TEAM A";
+        const teamB = el.teamBInput.value || "TEAM B";
+        const scoreA = Number.parseInt(el.scoreAInput.value, 10) || 0;
+        const scoreB = Number.parseInt(el.scoreBInput.value, 10) || 0;
+
+        el.scoreboard.innerHTML = `<strong>${teamA}</strong> ${scoreA} : ${scoreB} <strong>${teamB}</strong>`;
+        el.scoreboard.style.display = state.scoreboardVisible ? "flex" : "none";
+      }
+
+      function updateTimer() {
+        el.timer.textContent = formatTime(state.seconds);
+        el.timer.style.display = state.timerVisible ? "block" : "none";
+        el.startStop.textContent = state.timerRunning ? "Pause timer" : "Start timer";
+      }
+
+      function resizeCanvas() {
+        const rect = el.preview.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        const old = ctx.getImageData(0, 0, el.canvas.width || 1, el.canvas.height || 1);
+
+        el.canvas.width = Math.floor(rect.width * ratio);
+        el.canvas.height = Math.floor(rect.height * ratio);
+        el.canvas.style.width = `${rect.width}px`;
+        el.canvas.style.height = `${rect.height}px`;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+        if (old.width > 1 && old.height > 1) {
+          const temp = document.createElement("canvas");
+          temp.width = old.width;
+          temp.height = old.height;
+          temp.getContext("2d").putImageData(old, 0, 0);
+          ctx.drawImage(temp, 0, 0, old.width / ratio, old.height / ratio);
+        }
+      }
+
+      function pointerPos(event) {
+        const rect = el.canvas.getBoundingClientRect();
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
+      }
+
+      function startDraw(event) {
+        drawActive = true;
+        const { x, y } = pointerPos(event);
+        ctx.strokeStyle = el.penColor.value;
+        ctx.lineWidth = Number(el.penWidth.value);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+
+      function draw(event) {
+        if (!drawActive) {
+          return;
+        }
+        const { x, y } = pointerPos(event);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+
+      function stopDraw() {
+        drawActive = false;
+        ctx.closePath();
+      }
+
+      el.headlineInput.addEventListener("input", updateLowerThird);
+      el.descriptionInput.addEventListener("input", updateLowerThird);
+      el.teamAInput.addEventListener("input", updateScoreboard);
+      el.teamBInput.addEventListener("input", updateScoreboard);
+      el.scoreAInput.addEventListener("input", updateScoreboard);
+      el.scoreBInput.addEventListener("input", updateScoreboard);
+
+      el.toggleLt.addEventListener("click", () => {
+        state.lowerThirdVisible = !state.lowerThirdVisible;
+        updateLowerThird();
+      });
+
+      el.toggleScore.addEventListener("click", () => {
+        state.scoreboardVisible = !state.scoreboardVisible;
+        updateScoreboard();
+      });
+
+      el.toggleTimer.addEventListener("click", () => {
+        state.timerVisible = !state.timerVisible;
+        updateTimer();
+      });
+
+      el.startStop.addEventListener("click", () => {
+        state.timerRunning = !state.timerRunning;
+        if (state.timerRunning) {
+          timerId = window.setInterval(() => {
+            state.seconds += 1;
+            updateTimer();
+          }, 1000);
+        } else if (timerId) {
+          window.clearInterval(timerId);
+          timerId = null;
+        }
+        updateTimer();
+      });
+
+      el.clearDraw.addEventListener("click", () => {
+        ctx.clearRect(0, 0, el.canvas.width, el.canvas.height);
+      });
+
+      el.canvas.addEventListener("pointerdown", startDraw);
+      el.canvas.addEventListener("pointermove", draw);
+      el.canvas.addEventListener("pointerup", stopDraw);
+      el.canvas.addEventListener("pointerleave", stopDraw);
+
+      window.addEventListener("resize", resizeCanvas);
+
+      resizeCanvas();
+      updateLowerThird();
+      updateScoreboard();
+      updateTimer();
+    </script>
+  </body>
+</html>
